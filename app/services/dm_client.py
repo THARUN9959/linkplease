@@ -52,11 +52,11 @@ class PseudoGramClient:
         except httpx.HTTPError as exc:
             return SendResult(ok=False, status_code=0, error=str(exc), retryable=True)
 
-        if response.status_code == 202:
+        if response.status_code in (200, 201, 202):
             body = response.json()
             return SendResult(
                 ok=True,
-                status_code=202,
+                status_code=response.status_code,
                 dm_id=body.get("dm_id"),
                 api_status=body.get("status"),
             )
@@ -70,7 +70,8 @@ class PseudoGramClient:
 
         error_text = response.text
         try:
-            error_text = response.json().get("error") or response.text
+            payload = response.json()
+            error_text = payload.get("error") or payload.get("detail") or response.text
         except Exception:
             pass
 
